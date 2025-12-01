@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Sliders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex; /* Use flexbox for layout */
+            justify-content: center; /* Center the content horizontally */
+            align-items: flex-start; /* Top align the content */
+            height: 100vh; /* Set height of body to viewport height */
+            gap: 40px; /* Fixed space between sliders and image */
+        }
+
+        .sliders {
+            display: flex;
+            flex-direction: column; /* Stack sliders vertically */
+            width: 300px; /* Set a fixed width for the sliders container */
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            width: 120px;
+        }
+
+        input[type="range"] {
+            width: 250px;
+            margin-left: 10px;
+        }
+
+        img {
+            max-height: 97vh; /* Limit the image height to the height of the viewport */
+            width: auto; /* Ensure the aspect ratio is preserved */
+            object-fit: contain; /* Maintain aspect ratio without stretching */
+        }
+    </style>
+</head>
+
+<body>
+
+    
+    <div class="sliders">
+        <div class="slider-container">
+            <span class="slider-label" id="k-label">k = 10^-3.0</span>
+            <input type="range" id="k-slider">
+        </div>
+
+        <div class="slider-container">
+            <span class="slider-label" id="scale-label">scale = 1.0</span>
+            <input type="range" id="scale-slider">
+        </div>
+
+        <p>Optimal values:<br>
+        k_bkg = 1e-1<br>
+        scale_bkg = 1.0<br>
+        k_sim = 1e-3<br>
+        scale_sim = 4.75</p>
+    </div>
+    
+    <img id="image" src="plots/roc_GMM_test_group_sample_O3a_all_bkg_1e-3.0_1.0sim_1e-3.0_1.0.png" />
+
+    <script>
+        const kValues = [-3.0, -2.5, -2.0, -1.5, -1.0];
+        const scaleValues = [1.0, 2.25, 3.5, 4.75, 6.0];
+
+        function setupSlider(slider, values, label, prefix) {
+            slider.min = Math.min(...values);
+            slider.max = Math.max(...values);
+            slider.value = values[0];
+            slider.step = values[1] - values[0]; // Assuming uniform step size
+            label.textContent = `${prefix} ${slider.value}`;
+
+            slider.addEventListener("input", () => {
+                let closestValue = values.reduce((prev, curr) => 
+                    Math.abs(curr - slider.value) < Math.abs(prev - slider.value) ? curr : prev
+                );
+                slider.value = closestValue;
+                label.textContent = `${prefix} ${closestValue}`;
+                updateImage();  // Update image when slider changes
+            });
+        }
+
+        // Function to update the image based on current slider values
+        function updateImage() {
+            const k = parseFloat(document.getElementById("k-slider").value).toFixed(1);
+            const scale = formatScaleValue(parseFloat(document.getElementById("scale-slider").value));
+
+            const imagePath = `plots/roc_GMM_test_group_sample_O3a_all_bkg_1e${k}_${scale}sim_1e${k}_${scale}.png`;
+            document.getElementById("image").src = imagePath;
+        }
+
+        // Function to format scale values based on the specified rule
+        function formatScaleValue(value) {
+            return (value === 1.0 || value === 3.5 || value === 6.0) ? value.toFixed(1) : value.toFixed(2);
+        }
+
+        setupSlider(document.getElementById("k-slider"), kValues, document.getElementById("k-label"), "k = 10^");
+        setupSlider(document.getElementById("scale-slider"), scaleValues, document.getElementById("scale-label"), "scale =");
+    </script>
+
+</body>
+
+</html>

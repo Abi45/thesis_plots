@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROC curve</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            display: flex; /* Use flexbox for layout */
+            justify-content: center; /* Center the content horizontally */
+            align-items: flex-start; /* Top align the content */
+            height: 100vh; /* Set height of body to viewport height */
+            gap: 40px; /* Fixed space between sliders and image */
+        }
+
+        .sliders {
+            display: flex;
+            flex-direction: column; /* Stack sliders vertically */
+            width: 300px; /* Set a fixed width for the sliders container */
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            width: 120px;
+        }
+
+        input[type="range"] {
+            width: 250px;
+            margin-left: 10px;
+        }
+
+        img {
+            max-height: 97vh; /* Limit the image height to the height of the viewport */
+            width: auto; /* Ensure the aspect ratio is preserved */
+            object-fit: contain; /* Maintain aspect ratio without stretching */
+        }
+    </style>
+</head>
+
+<body>
+
+    
+    <div class="sliders">
+        <p><strong>Background model</strong></p>
+        <div class="slider-container">
+            <span class="slider-label" id="k-label-bkg">k = 10^-4.0</span>
+            <input type="range" id="k-slider-bkg">
+        </div>
+
+        <div class="slider-container">
+            <span class="slider-label" id="scale-label-bkg">scale = 1.0</span>
+            <input type="range" id="scale-slider-bkg">
+        </div>
+        <p><strong>Signal model</strong></p>
+        <div class="slider-container">
+            <span class="slider-label" id="k-label-sim">k = 10^-4.0</span>
+            <input type="range" id="k-slider-sim">
+        </div>
+
+        <div class="slider-container">
+            <span class="slider-label" id="scale-label-sim">scale = 4.0</span>
+            <input type="range" id="scale-slider-sim">
+        </div>
+
+        <p>Optimal values:<br>
+        k_bkg = 1e-3.33<br>
+        scale_bkg = 2.0<br>
+        k_sim = 1e-3.0<br>
+        scale_sim = 5.0</p>
+
+        <p>Old optimal values:<br>
+            k_bkg = 1e-1<br>
+            scale_bkg = 1.0<br>
+            k_sim = 1e-3<br>
+            scale_sim = 4.75</p>
+    </div>
+    
+    <img id="image" src="plots/roc_GMM_test_group_sample_O3a_all_bkg_1e-3.33_2.0sim_1e-3.0_5.0.png" />
+
+    <script>
+        const kValues = [-4.0, -3.67, -3.33, -3.0, -2.67, -2.33, -2.0, -1.67, -1.33, -1.0]
+        const scaleValuesBkg = [1.0, 1.33, 1.67, 2.0];
+        const scaleValuesSim = [4.0, 4.33, 4.67, 5.0, 5.33, 5.67, 6.0, 6.33, 6.67, 7.0];
+
+        function setupSlider(slider, values, label, prefix) {
+            slider.min = 0;
+            slider.max = values.length - 1;
+            slider.value = 0;
+            slider.step = 1;  // Force the slider to move only between valid values
+
+            // Set initial label
+            label.textContent = `${prefix} ${values[0]}`;
+
+            slider.addEventListener("input", () => {
+                let index = Math.round(slider.value);  // Snap to nearest valid index
+                let closestValue = values[index];  // Get the valid value from the list
+                slider.value = index;  // Ensure the slider stays at valid values
+                label.textContent = `${prefix} ${closestValue}`;
+                updateImage();  // Update the image based on new values
+            });
+        }
+            
+        // Function to update the image based on current slider values
+        function updateImage() {
+            // const kBkg = formatScaleValue(parseFloat(document.getElementById("k-slider-bkg").value));
+            // const scaleBkg = formatScaleValue(parseFloat(document.getElementById("scale-slider-bkg").value));
+            // const kSim = formatScaleValue(parseFloat(document.getElementById("k-slider-sim").value));
+            // const scaleSim = formatScaleValue(parseFloat(document.getElementById("scale-slider-sim").value));
+            const kBkg = formatScaleValue(parseFloat(kValues[document.getElementById("k-slider-bkg").value]));  // Get actual k value
+            const scaleBkg = formatScaleValue(parseFloat(scaleValuesBkg[document.getElementById("scale-slider-bkg").value]));  // Get actual scale value
+            const kSim = formatScaleValue(parseFloat(kValues[document.getElementById("k-slider-sim").value]));  // Get actual k value
+            const scaleSim = formatScaleValue(parseFloat(scaleValuesSim[document.getElementById("scale-slider-sim").value]));  // Get actual scale value
+
+            const imagePath = `plots/roc_GMM_test_group_sample_O3a_all_bkg_1e${kBkg}_${scaleBkg}sim_1e${kSim}_${scaleSim}.png`;
+            console.log("Generated image path:", imagePath);
+            document.getElementById("image").src = imagePath;
+        }
+
+        function formatScaleValue(value) {
+            if (Number.isInteger(value)) {
+                return value.toFixed(1);  // Keep one decimal for integers
+            }
+            return (Math.round(value * 100) / 100).toFixed(2);  // Force two decimals for non-integers
+        }
+        
+
+        setupSlider(document.getElementById("k-slider-bkg"), kValues, document.getElementById("k-label-bkg"), "k = 10^");
+        setupSlider(document.getElementById("scale-slider-bkg"), scaleValuesBkg, document.getElementById("scale-label-bkg"), "scale =");
+        setupSlider(document.getElementById("k-slider-sim"), kValues, document.getElementById("k-label-sim"), "k = 10^");
+        setupSlider(document.getElementById("scale-slider-sim"), scaleValuesSim, document.getElementById("scale-label-sim"), "scale =");
+    </script>
+
+</body>
+
+</html>
